@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Nivel 1 - Login Instagram</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050505;
+      --panel: rgba(12, 12, 14, 0.84);
+      --panel-strong: rgba(18, 18, 22, 0.96);
+      --line: rgba(255,255,255,.09);
+      --text: #f5f5f5;
+      --muted: #a1a1aa;
+      --accent: #00ff66;
+      --accent-soft: rgba(0,255,102,.11);
+      --pink: #ff2f92;
+      --blue: #0095f6;
+      --danger: #ff5a5f;
+      --ok: #41d16f;
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
+    }
+
+     
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background: radial-gradient(circle at top, rgba(131,58,180,.10), transparent 30%), var(--bg);
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* 🔥 FIX 1: evitar que el canvas bloquee clicks */
+    #matrix {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none; /* 👈 IMPORTANTE */
+    }
+
+    /* 🔥 FIX 2: overlay no bloquea */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none; /* 👈 IMPORTANTE */
+    }
+
+    /* 🔥 FIX 3: subir zona clickeable */
+    .side {
+      position: relative;
+      z-index: 50;
+    }
+
+    .action-btn {
+      position: relative;
+      z-index: 100;
+    }
+
+    #matrix {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: .26;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(0,0,0,.10), rgba(0,0,0,.78));
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .mobile-brandbar {
+      display: none;
+    }
+
+    .app,
+    .app-view {
+      position: relative;
+      z-index: 2;
+    }
+
+    .app {
+      min-height: 100vh;
+      width: min(1160px, 95vw);
+      margin: 0 auto;
+      padding: 28px 0;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .login-side {
+      min-height: 720px;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+
+    .login-card {
+      width: min(100%, 410px);
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      padding: 34px 28px;
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(0,255,102,.34);
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: .82rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+
+    .ig-wordmark {
+      font-size: 2.7rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-top: 8px;
+    }
+
+    .ig-wordmark span {
+      background: linear-gradient(135deg, #fd1d1d, #fcb045, #833ab4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .login-panel {
+      width: 100%;
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .login-panel input {
+      width: 100%;
+      background: #121216;
+      color: var(--text);
+      border: 1px solid #2a2a31;
+      border-radius: 12px;
+      padding: 14px 13px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .login-panel input:focus {
+      border-color: rgba(0,149,246,.6);
+      box-shadow: 0 0 0 3px rgba(0,149,246,.10);
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .hint-btn,
+    .mini-btn,
+    .message-btn {
+      border: none;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00b140, #00ff66);
+      color: #021b09;
+      padding: 14px 16px;
+    }
+
+    .btn-secondary,
+    .hint-btn,
+    .mini-btn,
+    .message-btn {
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      border: 1px solid var(--line);
+      padding: 13px 16px;
+    }
+
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .hint-btn:hover,
+    .action-btn:hover,
+    .close-btn:hover,
+    .mini-btn:hover,
+    .message-btn:hover {
+      filter: brightness(1.06);
+    }
+
+    .divider {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--muted);
+      font-size: .84rem;
+      font-weight: 700;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,.12);
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: .92rem;
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    .status-box {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      color: #d7d7dd;
+      padding: 14px;
+      min-height: 72px;
+      line-height: 1.45;
+      font-weight: 700;
+      font-size: .94rem;
+    }
+
+    .status-box.error {
+      border-color: rgba(255,90,95,.22);
+      background: rgba(255,90,95,.08);
+      color: #ffd0d0;
+    }
+
+    .status-box.success {
+      border-color: rgba(0,255,102,.26);
+      background: rgba(0,255,102,.08);
+      color: #cbffd9;
+    }
+
+    .side {
+      display: grid;
+      gap: 16px;
+      align-content: center;
+    }
+
+    .side-card,
+    .clue-box,
+    .profile-card,
+    .dashboard-card,
+    .inbox-panel,
+    .chat-panel,
+    .safety-card,
+    .feed-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .side-card h2,
+    .profile-card h2,
+    .clue-box h3,
+    .log-card h3,
+    .dashboard-card h2,
+    .chat-panel h3,
+    .feed-card h3,
+    .safety-card h3 {
+      margin-bottom: 8px;
+    }
+
+    .side-card p,
+    .profile-card p,
+    .clue-text,
+    .log-box,
+    .stats,
+    .dashboard-card p,
+    .chat-hint,
+    .feed-card p,
+    .safety-card p {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: .94rem;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .action-btn,
+    .close-btn {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding: 13px 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .clue-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .clue-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .lock {
+      font-size: .8rem;
+      border-radius: 999px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      color: #e5e7eb;
+      font-weight: 800;
+    }
+
+    .clue-content {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .clue-box.revealed {
+      border-color: rgba(0,255,102,.24);
+      background: rgba(0,255,102,.06);
+    }
+
+    .clue-box.revealed .clue-content {
+      display: block;
+    }
+
+    .clue-box.revealed .lock {
+      color: var(--accent);
+      border-color: rgba(0,255,102,.24);
+      background: rgba(0,255,102,.08);
+    }
+
+    .log-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .log-box {
+      background: #0a0a0d;
+      border: 1px solid rgba(0,255,102,.20);
+      border-radius: 16px;
+      padding: 15px;
+      white-space: pre-wrap;
+      font-family: "Courier New", monospace;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: .8rem;
+      font-weight: 800;
+      color: var(--accent);
+      background: rgba(0,255,102,.08);
+      border: 1px solid rgba(0,255,102,.20);
+      margin-bottom: 10px;
+    }
+
+    .profile-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0,0,0,.55);
+      z-index: 12;
+      backdrop-filter: blur(10px);
+    }
+
+    .profile-modal.open {
+      display: flex;
+    }
+
+    .profile-card {
+      width: min(760px, 100%);
+      background: var(--panel-strong);
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: auto;
+      padding-inline: 12px;
+    }
+
+    .profile-head {
+      display: grid;
+      grid-template-columns: 108px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+      margin-top: 10px;
+      margin-bottom: 18px;
+    }
+
+    .avatar {
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fd1d1d, #fcb045, #833ab4);
+      padding: 4px;
+      flex-shrink: 0;
+    }
+
+    .avatar .inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #17171b;
+      display: grid;
+      place-items: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+    }
+
+    .profile-main {
+      min-width: 0;
+    }
+
+    .profile-username-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .profile-username-row h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .verified-badge {
+      width: 22px;
+      height: 22px;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin: 0 0 14px;
+      color: #f4f4f5;
+    }
+
+    .stat {
+      min-width: 0;
+    }
+
+    .stat strong,
+    .stat b {
+      display: block;
+      font-size: 1.08rem;
+      line-height: 1.1;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+
+    .stat-label {
+      color: #d4d4d8;
+      line-height: 1.15;
+      word-break: keep-all;
+    }
+
+    .profile-bio {
+      color: #e4e4e7;
+      line-height: 1.55;
+    }
+
+    .grid-posts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .post {
+      aspect-ratio: 1/1;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.07);
+      background: linear-gradient(135deg, rgba(131,58,180,.26), rgba(252,176,69,.18));
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,.78);
+      font-weight: 800;
+      text-align: center;
+      padding: 10px;
+      font-size: .86rem;
+    }
+
+    .app-view {
+      display: none;
+      width: min(1340px, 96vw);
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 18px 0;
+      grid-template-columns: 240px 1fr 360px;
+      gap: 18px;
+    }
+
+    .app-view.active {
+      display: grid;
+    }
+
+    .ig-shell {
+      background: rgba(7,7,10,.88);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+
+    .ig-sidebar {
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      justify-content: space-between;
+    }
+
+    .ig-nav {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .ig-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      color: var(--text);
+      text-decoration: none;
+      background: transparent;
+      font-weight: 700;
+    }
+
+    .ig-link.active,
+    .ig-link:hover {
+      background: rgba(255,255,255,.05);
+      border-color: var(--line);
+    }
+
+    .ig-link.has-unread {
+      position: relative;
+      justify-content: space-between;
+      gap: 12px;
+      border-color: rgba(0,149,246,.16);
+    }
+
+    .ig-link-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .unread-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .unread-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 7px;
+      border-radius: 999px;
+      background: var(--blue);
+      color: white;
+      font-size: .74rem;
+      font-weight: 800;
+      box-shadow: 0 0 0 4px rgba(0,149,246,.12);
+    }
+
+    .unread-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 0 5px rgba(0,149,246,.14);
+      animation: unreadPulse 1.6s infinite;
+    }
+
+    @keyframes unreadPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0,149,246,.34); }
+      70% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(0,149,246,0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0,149,246,0); }
+    }
+
+    .mini-note {
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+
+    .ig-main {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .dashboard-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .dashboard-top h2 {
+      margin-bottom: 6px;
+    }
+
+    .mini-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .feed-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .feed-head {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .feed-post {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .feed-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+    }
+
+    .mini-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fd1d1d, #fcb045, #833ab4);
+      padding: 2px;
+    }
+
+    .mini-avatar span {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #151519;
+      font-size: .95rem;
+    }
+
+    .feed-media {
+      border-radius: 22px;
+      min-height: 280px;
+      background: linear-gradient(135deg, rgba(131,58,180,.35), rgba(252,176,69,.24), rgba(0,149,246,.18));
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,.88);
+      font-size: 1.4rem;
+      font-weight: 800;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .feed-actions {
+      display: flex;
+      gap: 10px;
+      color: #d4d4d8;
+      font-size: .95rem;
+      font-weight: 700;
+      flex-wrap: wrap;
+    }
+
+    .ig-right {
+      padding: 18px;
+      display: none;
+      gap: 16px;
+      align-content: start;
+      grid-template-columns: 320px minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .ig-right.open {
+      display: grid;
+    }
+
+    .app-view.messages-mode {
+      grid-template-columns: 240px minmax(0, 1fr);
+    }
+
+    .app-view.messages-mode .ig-main {
+      display: none;
+    }
+
+    .app-view.messages-mode .ig-right {
+      display: grid;
+    }
+
+    .inbox-panel {
+      padding: 0;
+      overflow: hidden;
+      align-self: start;
+    }
+
+    .inbox-head {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dm-item {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .dm-item:hover,
+    .dm-item.active {
+      background: rgba(255,255,255,.05);
+    }
+
+    .dm-meta {
+      min-width: 0;
+    }
+
+    .dm-name {
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .dm-preview {
+      color: var(--muted);
+      font-size: .88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dm-badge {
+      font-size: .75rem;
+      font-weight: 800;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: #e4e4e7;
+      white-space: nowrap;
+    }
+
+    .chat-panel {
+      display: grid;
+      gap: 12px;
+      align-self: start;
+    }
+
+    .chat-placeholder {
+      border: 1px dashed rgba(255,255,255,.12);
+      border-radius: 24px;
+      padding: 28px;
+      min-height: 520px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255,255,255,.025);
+    }
+
+    .chat-placeholder strong {
+      color: var(--text);
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.12rem;
+    }
+
+    .chat-hint {
+      font-size: .88rem;
+    }
+
+    .bubble {
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      line-height: 1.5;
+    }
+
+    .bubble strong {
+      color: white;
+    }
+
+    .bubble.fake {
+      border-color: rgba(255,90,95,.22);
+    }
+
+    .bubble.safe {
+      border-color: rgba(65,209,111,.22);
+    }
+
+    .message-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .message-btn.flag {
+      border-color: rgba(255,90,95,.25);
+    }
+
+    .message-btn.ok {
+      border-color: rgba(65,209,111,.25);
+    }
+
+    .analysis-box {
+      display: none;
+      border-radius: 16px;
+      padding: 14px;
+      line-height: 1.5;
+      font-size: .92rem;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+    }
+
+    .analysis-box.show {
+      display: block;
+    }
+
+    .analysis-box.good {
+      border-color: rgba(65,209,111,.25);
+      background: rgba(65,209,111,.08);
+      color: #d7ffe4;
+    }
+
+    .analysis-box.bad {
+      border-color: rgba(255,90,95,.25);
+      background: rgba(255,90,95,.08);
+      color: #ffd5d5;
+    }
+
+    .safety-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .safety-item {
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      color: #e4e4e7;
+      font-size: .9rem;
+      line-height: 1.45;
+    }
+
+
+    .challenge-banner {
+      display: none;
+      border-radius: 16px;
+      padding: 14px;
+      line-height: 1.5;
+      font-size: .92rem;
+      border: 1px solid rgba(0,149,246,.24);
+      background: rgba(0,149,246,.08);
+      color: #dff1ff;
+    }
+
+    .challenge-banner.show {
+      display: block;
+    }
+
+    .chat-window {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      background: rgba(255,255,255,.03);
+    }
+
+    .chat-back-mobile {
+      display: none;
+    }
+
+    .chat-topbar {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .chat-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .chat-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fd1d1d, #fcb045, #833ab4);
+      padding: 2px;
+      flex-shrink: 0;
+    }
+
+    .chat-avatar span {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #151519;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: .92rem;
+    }
+
+    .chat-title {
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .chat-subtitle {
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .thread {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      max-height: 420px;
+      overflow-y: auto;
+      background:
+        radial-gradient(circle at top left, rgba(131,58,180,.08), transparent 30%),
+        rgba(8,8,12,.65);
+    }
+
+    .msg {
+      max-width: min(82%, 340px);
+      padding: 12px 14px;
+      border-radius: 18px;
+      line-height: 1.45;
+      font-size: .92rem;
+      border: 1px solid var(--line);
+      position: relative;
+    }
+
+    .msg.them {
+      background: rgba(255,255,255,.06);
+      justify-self: start;
+      border-top-left-radius: 8px;
+    }
+
+    .msg.me {
+      background: rgba(0,149,246,.16);
+      border-color: rgba(0,149,246,.22);
+      justify-self: end;
+      border-top-right-radius: 8px;
+    }
+
+    .msg.sus {
+      border-color: rgba(255,90,95,.24);
+      background: rgba(255,90,95,.08);
+    }
+
+    .msg-time {
+      display: block;
+      margin-top: 6px;
+      color: #bdbdc7;
+      font-size: .75rem;
+    }
+
+    .message-actions {
+      padding: 0 16px 16px;
+    }
+
+    .action-btn, .mini-btn, .ig-link, .close-btn, .hint-btn, .message-btn, .btn-primary { position: relative; z-index: 5; }
+    /* 🔥 FIX PERFIL */
+    .profile-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0,0,0,.55);
+      z-index: 9999; /* 🔥 CLAVE */
+      backdrop-filter: blur(10px);
+    }
+
+    .profile-modal.open {
+      display: flex;
+    }
+
+
+    @media (max-width: 1180px) {
+      .app-view {
+        grid-template-columns: 1fr;
+      }
+
+      .app-view.messages-mode {
+        grid-template-columns: 1fr;
+      }
+
+      .ig-sidebar {
+        display: none;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .login-side {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .mobile-brandbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(5,5,5,.90);
+        backdrop-filter: blur(12px);
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .mobile-brandbar .ig-wordmark {
+        font-size: 2rem;
+        margin: 0;
+      }
+
+      .app,
+      .app-view {
+        width: 100%;
+        padding: 14px;
+      }
+
+      .panel,
+      .side-card,
+      .clue-box,
+      .log-card,
+      .profile-card,
+      .dashboard-card,
+      .inbox-panel,
+      .chat-panel,
+      .safety-card,
+      .feed-card,
+      .ig-shell {
+        border-radius: 22px;
+      }
+
+      .login-side {
+        padding: 0;
+      }
+
+      .login-card {
+        width: 100%;
+        padding: 24px 18px;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-modal {
+        align-items: flex-end;
+        padding: 10px;
+      }
+
+      .profile-card {
+        width: 100%;
+        max-height: 88vh;
+        overflow-y: auto;
+        padding: 18px 14px 16px;
+        border-radius: 22px 22px 16px 16px;
+      }
+
+      .close-btn {
+        top: 12px;
+        right: 12px;
+      }
+
+      .profile-head {
+        grid-template-columns: 76px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+        margin-top: 10px;
+      }
+
+      .avatar {
+        width: 76px;
+        height: 76px;
+      }
+
+      .avatar .inner {
+        font-size: 1.2rem;
+      }
+
+      .profile-username-row {
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-right: 44px;
+      }
+
+      .profile-card h2 {
+        font-size: 1.05rem;
+        padding-right: 0;
+      }
+
+      .verified-badge {
+        width: 18px;
+        height: 18px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin: 0 0 12px;
+        font-size: .82rem;
+      }
+
+      .stat strong,
+      .stat b {
+        font-size: 1rem;
+        margin-bottom: 1px;
+      }
+
+      .stat-label {
+        line-height: 1.05;
+        word-break: break-word;
+      }
+
+      .profile-card p,
+      .profile-bio,
+      .dashboard-card p,
+      .feed-card p,
+      .safety-card p,
+      .chat-hint {
+        font-size: .9rem;
+      }
+
+      .grid-posts {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .post {
+        border-radius: 14px;
+        font-size: .72rem;
+        padding: 8px;
+      }
+
+      .feed-media {
+        min-height: 200px;
+        font-size: 1.15rem;
+      }
+
+      .message-actions,
+      .mini-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .ig-right {
+        grid-template-columns: 1fr;
+        padding: 0;
+      }
+
+      .inbox-head {
+        padding: 16px 16px 12px;
+      }
+
+      .chat-placeholder {
+        display: none !important;
+      }
+
+      .chat-panel {
+        display: none;
+      }
+
+      .app-view.messages-mode.mobile-chat-open .inbox-panel {
+        display: none;
+      }
+
+      .app-view.messages-mode.mobile-chat-open .chat-panel.active-chat {
+        display: grid !important;
+      }
+
+      .app-view.messages-mode:not(.mobile-chat-open) .inbox-panel {
+        display: block;
+      }
+
+      .chat-back-mobile {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,.04);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 10px 12px;
+        margin: 0 0 10px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .thread {
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .profile-head {
+        grid-template-columns: 78px minmax(0, 1fr);
+        gap: 12px;
+        text-align: left;
+      }
+
+      .avatar {
+        margin: 2px 0 0;
+        width: 78px;
+        height: 78px;
+      }
+
+      .profile-username-row {
+        padding-right: 46px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .stat strong,
+      .stat b {
+        font-size: .96rem;
+      }
+
+      .stat-label {
+        font-size: .76rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="overlay"></div>
+
+  <div class="mobile-brandbar">
+    <div class="ig-wordmark">Insta<span>gram</span></div>
+    <div class="badge">Nivel 1</div>
+  </div>
+
+  <div class="app" id="loginExperience">
+    <section class="panel login-side">
+      <div class="login-card">
+        <div class="badge">[ NIVEL 1 ] LOGIN SIMULADO</div>
+        <div class="ig-wordmark">Insta<span>gram</span></div>
+
+        <div class="login-panel">
+          <input type="text" id="usernameInput" value="nicki_star" placeholder="Teléfono, usuario o correo" autocomplete="off" />
+          <input type="password" id="passwordInput" placeholder="Contraseña" autocomplete="off" />
+          <button class="btn-primary" onclick="tryPassword()">Iniciar sesión</button>
+        </div>
+
+        <div class="divider">O</div>
+
+        <div class="helper">
+          La pantalla principal muestra <strong>solo el login</strong>. Toda la investigación queda al costado y el perfil del usuario afectado se abre aparte al hacer clic.
+        </div>
+
+        <div class="status-box" id="result">
+          Ingresá una contraseña para probar el acceso simulado de <strong>nicki_star</strong>.
+        </div>
+      </div>
+    </section>
+
+    <section class="side">
+      <div class="side-card">
+        <div class="pill">Panel del caso</div>
+        <h2>Investigación</h2>
+        <p>Desde acá podés ir desbloqueando las pistas sin mezclar todo con el login.</p>
+        <div class="actions">
+          <button class="action-btn" type="button" onclick="document.getElementById('cluesSection').scrollIntoView({behavior:'smooth'})">Ir a pistas</button>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div class="pill">Acceso al perfil</div>
+        <h2>Perfil público aparte</h2>
+        <p>En esta versión, el perfil de nicki_star se abre en otra página con la misma estética. Eso evita problemas del modal y mantiene la dinámica clara.</p>
+        <div class="actions">
+          <button class="action-btn" type="button" onclick="window.location.href='nicki_nicole_perfil.html'">Abrir perfil de Nicki</button>
+          <button class="action-btn" type="button" onclick="document.getElementById('cluesSection').scrollIntoView({behavior:'smooth'})">Seguir investigando</button>
+        </div>
+      </div>
+
+      <div class="clue-grid" id="cluesSection">
+        <div class="clue-box" id="clue1">
+          <div class="clue-head">
+            <h3>Pista 1</h3>
+            <span class="lock">🔒 Bloqueada</span>
+          </div>
+          <button class="hint-btn" type="button" onclick="revealClue(1)">Desbloquear pista 1</button>
+          <div class="clue-content">
+            <p class="clue-text">No hace falta probar algo súper complejo. Muchas personas usan contraseñas fáciles o relacionadas con algo importante para ellas.</p>
+          </div>
+        </div>
+
+        <div class="clue-box" id="clue2">
+          <div class="clue-head">
+            <h3>Pista 2</h3>
+            <span class="lock">🔒 Bloqueada</span>
+          </div>
+          <button class="hint-btn" type="button" onclick="revealClue(2)">Desbloquear pista 2</button>
+          <div class="clue-content">
+            <p class="clue-text">El perfil público puede mostrar información útil para pensar posibles claves.</p>
+          </div>
+        </div>
+
+        <div class="clue-box" id="clue3">
+          <div class="clue-head">
+            <h3>Pista 3</h3>
+            <span class="lock">🔒 Bloqueada</span>
+          </div>
+          <button class="hint-btn" type="button" onclick="revealClue(3)">Desbloquear pista 3</button>
+          <div class="clue-content">
+            <p class="clue-text">A veces, después de una palabra conocida, agregan un número corto.</p>
+          </div>
+        </div>
+
+        <div class="clue-box" id="clue4">
+          <div class="clue-head">
+            <h3>Pista 4</h3>
+            <span class="lock">🔒 Bloqueada</span>
+          </div>
+          <button class="hint-btn" type="button" onclick="revealClue(4)">Desbloquear pista 4</button>
+          <div class="clue-content">
+            <p class="clue-text"><strong>Última pista:</strong> <code>bHVuYTE=</code>. Está en <strong>Base64</strong>. Averiguá qué es y cómo decodificarlo.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="log-card">
+        <h3>Registro de intentos observados</h3>
+        <div class="log-box" id="log">[10:14:03] Usuario: nicki_star | Contraseña: 1234 → intento fallido
+[10:14:05] Usuario: nicki_star | Contraseña: 0000 → intento fallido
+[10:14:07] Usuario: nicki_star | Contraseña: password → intento fallido
+[10:14:09] Usuario: nicki_star | Contraseña: nicki → intento fallido
+[10:14:11] Usuario: nicki_star | Contraseña: nicki123 → intento fallido
+[10:14:13] Usuario: nicki_star | Contraseña: admin123 → intento fallido
+</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="app-view" id="loggedExperience">
+    <aside class="ig-shell ig-sidebar">
+      <div>
+        <div class="ig-wordmark">Insta<span>gram</span></div>
+        <nav class="ig-nav">
+          <a href="#" class="ig-link active" id="homeNavLink" onclick="openHome(event)">⌂ Inicio</a>
+          <a href="#messagesChallenge" class="ig-link has-unread" id="messagesNavLink" onclick="openMessagesPanel(event)">
+            <span class="ig-link-main">✉ Mensajes</span>
+            <span class="unread-wrap">
+              <span class="unread-pill" id="messagesUnreadCount">5</span>
+              <span class="unread-dot" id="messagesUnreadDot"></span>
+            </span>
+          </a>
+          <a href="#" class="ig-link" id="openProfileLink" onclick="window.location.href='nicki_nicole_perfil.html'; return false;">◎ Perfil</a>
+          <a href="#safetyCard" class="ig-link">🛡 Seguridad</a>
+        </nav>
+      </div>
+      <div class="mini-note">
+        Simulación visual del acceso conseguido. Después del login correcto se abre una vista tipo red social con un desafío de mensajes sospechosos.
+      </div>
+    </aside>
+
+    <main class="ig-shell ig-main">
+      <div class="dashboard-card">
+        <div class="dashboard-top">
+          <div class="pill">Acceso concedido</div>
+          <h2>Sesión abierta como nicki_star</h2>
+          <p>Ahora se ve una interfaz tipo Instagram para continuar el desafío. La consigna es entrar a los chats, leer mensajes de ida y vuelta y detectar cuál conversación tiene señales de estafa.</p>
+        </div>
+        <div class="mini-actions">
+          <button class="mini-btn" type="button" onclick="openMessagesPanel(event)">Ir a mensajes</button>
+          <button class="mini-btn" id="openProfileBtnInside" type="button" onclick="window.location.href='nicki_nicole_perfil.html'; return false;">Ver perfil</button>
+        </div>
+      </div>
+
+      <div class="feed-card">
+        <div class="feed-head">
+          <strong>Feed reciente</strong>
+          <span class="mini-note">Vista simulada</span>
+        </div>
+        <div class="feed-post">
+          <div class="feed-user">
+            <div class="mini-avatar"><span>NS</span></div>
+            <div>
+              <div>nicki_star</div>
+              <div class="mini-note">Hace 12 min</div>
+            </div>
+          </div>
+          <div class="feed-media">Backstage tour ✨<br>nuevo single en camino</div>
+          <div class="feed-actions">
+            <span>♡ 24.381 Me gusta</span>
+            <span>💬 814 comentarios</span>
+            <span>✈ Compartido 302 veces</span>
+          </div>
+          <p>Hoy tocó ensayo, café y estudio. No abrir links raros ni sorteos sospechosos 😅</p>
+        </div>
+      </div>
+    </main>
+
+        
+<section class="ig-shell ig-right" id="messagesChallenge" aria-hidden="true">
+  <div class="inbox-panel">
+    <div class="inbox-head">
+      <div class="pill">Mensajes</div>
+      <h3>Bandeja principal</h3>
+      <p class="chat-hint">Entrá a un chat para leer la conversación. Primero se ve solo la bandeja y, cuando elegís un mensaje, se abre el historial como un DM normal.</p>
+      <p class="chat-hint"><strong>Tip:</strong> el punto azul marca que hay mensajes sin leer y te guía a tocar esa sección primero.</p>
+    </div>
+    <div class="dm-item" id="dm-manager" onclick="showChat('manager')">
+      <div class="dm-meta">
+        <div class="dm-name">vale.manager</div>
+        <div class="dm-preview">Nos confirmaron la entrevista de mañana a las 11...</div>
+      </div>
+      <span class="dm-badge">Equipo</span>
+    </div>
+    <div class="dm-item" id="dm-brand" onclick="showChat('brand')">
+      <div class="dm-meta">
+        <div class="dm-name">glowup.agency</div>
+        <div class="dm-preview">Te mandamos propuesta y fechas tentativas.</div>
+      </div>
+      <span class="dm-badge">Marca</span>
+    </div>
+    <div class="dm-item" id="dm-friend" onclick="showChat('friend')">
+      <div class="dm-meta">
+        <div class="dm-name">luli.music</div>
+        <div class="dm-preview">JAJA la cara que pusiste en la última foto 😭</div>
+      </div>
+      <span class="dm-badge">Amiga</span>
+    </div>
+
+    <div class="dm-item" id="dm-instagram" onclick="showChat('instagram')">
+      <div class="dm-meta">
+        <div class="dm-name">instagram</div>
+        <div class="dm-preview">Revisamos un inicio de sesión nuevo en tu cuenta.</div>
+      </div>
+      <span class="dm-badge">Sistema</span>
+    </div>
+    <div class="dm-item" id="dm-scam" onclick="showChat('scam')">
+      <div class="dm-meta">
+        <div class="dm-name">brand_verify_team</div>
+        <div class="dm-preview">Último aviso para mantener la insignia verificada.</div>
+      </div>
+      <span class="dm-badge">Sospechoso</span>
+    </div>
+  </div>
+
+  <div class="chat-placeholder" id="chatPlaceholder">
+    <div>
+      <strong>Seleccioná un chat</strong>
+      Acá se va a abrir el historial completo del mensaje, como en Instagram. La consigna aparece recién cuando entrás a una conversación.
+    </div>
+  </div>
+
+  <div class="chat-panel" id="chat-manager" style="display:none;">
+    <button class="chat-back-mobile" type="button" onclick="backToInbox()">← Volver a mensajes</button>
+    <div class="challenge-banner" id="challenge-manager">Consigna: analizá el mensaje. ¿Te parece normal o hay algo extraño?</div>
+    <div class="chat-window">
+      <div class="chat-topbar">
+        <div class="chat-user">
+          <div class="chat-avatar"><span>VM</span></div>
+          <div>
+            <div class="chat-title">vale.manager</div>
+            <div class="chat-subtitle">Activa hace 5 min</div>
+          </div>
+        </div>
+        <span class="dm-badge">Equipo</span>
+      </div>
+      <div class="thread">
+        <div class="msg them">Nicki, nos confirmaron la entrevista en Radio Beat mañana a las 11. ¿Seguís libre?<span class="msg-time">09:14</span></div>
+        <div class="msg me">Sí, de una. ¿Es presencial o remoto?<span class="msg-time">09:16</span></div>
+        <div class="msg them">Presencial. Después te paso la dirección y el contacto de producción.<span class="msg-time">09:17</span></div>
+        <div class="msg me">Perfecto, así me organizo con maquillaje y traslado 🙌<span class="msg-time">09:18</span></div>
+      </div>
+    </div>
+    <div class="message-actions">
+      <button class="message-btn flag" type="button" onclick="gradeMessage('manager','fake')">Marcar como sospechoso</button>
+      <button class="message-btn ok" type="button" onclick="gradeMessage('manager','real')">Marcar como creíble</button>
+    </div>
+    <div class="analysis-box" id="analysis-manager"></div>
+  </div>
+
+  <div class="chat-panel" id="chat-brand" style="display:none;">
+    <button class="chat-back-mobile" type="button" onclick="backToInbox()">← Volver a mensajes</button>
+    <div class="challenge-banner" id="challenge-brand">Consigna: analizá el mensaje. ¿Te parece normal o hay algo extraño?</div>
+    <div class="chat-window">
+      <div class="chat-topbar">
+        <div class="chat-user">
+          <div class="chat-avatar"><span>GA</span></div>
+          <div>
+            <div class="chat-title">glowup.agency</div>
+            <div class="chat-subtitle">Colaboración potencial</div>
+          </div>
+        </div>
+        <span class="dm-badge">Marca</span>
+      </div>
+      <div class="thread">
+        <div class="msg them">Hola Nicki ✨ Soy Mica de GlowUp Agency. Vimos tu contenido del backstage y nos encantó.<span class="msg-time">11:02</span></div>
+        <div class="msg them">Tenemos una propuesta para una campaña de skincare en mayo. ¿Te sirve que te la mande por mail?<span class="msg-time">11:02</span></div>
+        <div class="msg me">Hola Mica, sí, mejor por mail así la veo con Vale. Gracias 💌<span class="msg-time">11:08</span></div>
+        <div class="msg them">Dale, te escribimos al que está en la bio con presupuesto y fechas tentativas.<span class="msg-time">11:09</span></div>
+      </div>
+    </div>
+    <div class="message-actions">
+      <button class="message-btn flag" type="button" onclick="gradeMessage('brand','fake')">Marcar como sospechoso</button>
+      <button class="message-btn ok" type="button" onclick="gradeMessage('brand','real')">Marcar como creíble</button>
+    </div>
+    <div class="analysis-box" id="analysis-brand"></div>
+  </div>
+
+  <div class="chat-panel" id="chat-friend" style="display:none;">
+    <button class="chat-back-mobile" type="button" onclick="backToInbox()">← Volver a mensajes</button>
+    <div class="challenge-banner" id="challenge-friend">Consigna: analizá el mensaje. ¿Te parece normal o hay algo extraño?</div>
+    <div class="chat-window">
+      <div class="chat-topbar">
+        <div class="chat-user">
+          <div class="chat-avatar"><span>LM</span></div>
+          <div>
+            <div class="chat-title">luli.music</div>
+            <div class="chat-subtitle">Seguida por vos</div>
+          </div>
+        </div>
+        <span class="dm-badge">Amiga</span>
+      </div>
+      <div class="thread">
+        <div class="msg them">JAJA la cara que pusiste en la última foto 😭<span class="msg-time">18:21</span></div>
+        <div class="msg me">No puedo creer que subiste ESA justo 😭😭<span class="msg-time">18:22</span></div>
+        <div class="msg them">Obvio, era la mejor. Igual te pasé las otras al drive por si querés elegir portada.<span class="msg-time">18:23</span></div>
+        <div class="msg me">Amo. Después las veo y te digo cuál queda mejor para el feed 💖<span class="msg-time">18:24</span></div>
+      </div>
+    </div>
+    <div class="message-actions">
+      <button class="message-btn flag" type="button" onclick="gradeMessage('friend','fake')">Marcar como sospechoso</button>
+      <button class="message-btn ok" type="button" onclick="gradeMessage('friend','real')">Marcar como creíble</button>
+    </div>
+    <div class="analysis-box" id="analysis-friend"></div>
+  </div>
+
+
+  <div class="chat-panel" id="chat-instagram" style="display:none;">
+    <button class="chat-back-mobile" type="button" onclick="backToInbox()">← Volver a mensajes</button>
+    <div class="challenge-banner" id="challenge-instagram">Consigna: analizá el mensaje. ¿Te parece normal o hay algo extraño?</div>
+    <div class="chat-window">
+      <div class="chat-topbar">
+        <div class="chat-user">
+          <div class="chat-avatar"><span>IG</span></div>
+          <div>
+          <div class="chat-title">
+            instagram
+            <svg style="width:16px;height:16px;margin-left:6px;vertical-align:middle;" viewBox="0 0 40 40">
+              <path fill="#0095F6" d="M20 1.8l4.22 2.57 4.93-.27 2.57 4.22 4.34 2.35-.27 4.93L38.2 20l-2.57 4.22.27 4.93-4.22 2.57-2.35 4.34-4.93-.27L20 38.2l-4.22-2.57-4.93.27-2.57-4.22-4.34-2.35.27-4.93L1.8 20l2.57-4.22-.27-4.93 4.22-2.57 2.35-4.34 4.93.27L20 1.8z"/>
+              <path fill="#ffffff" d="M17.1 25.95l-5.05-4.99 2.25-2.28 2.75 2.72 8.66-8.75 2.25 2.23z"/>
+            </svg>
+          </div>
+          <div class="chat-subtitle">Cuenta oficial</div>
+          </div>
+        </div>
+        <span class="dm-badge">Sistema</span>
+      </div>
+      <div class="thread">
+        <div class="msg them">Notamos un inicio de sesión reciente desde un dispositivo que no usás habitualmente.<span class="msg-time">07:12</span></div>
+        <div class="msg them">Si fuiste vos, no necesitás hacer nada. Si no reconocés esta actividad, revisá la sección Seguridad dentro de la app.<span class="msg-time">07:12</span></div>
+        <div class="msg me">Sí, fui yo. Gracias.<span class="msg-time">07:16</span></div>
+      </div>
+    </div>
+    <div class="message-actions">
+      <button class="message-btn flag" type="button" onclick="gradeMessage('instagram','fake')">Marcar como sospechoso</button>
+      <button class="message-btn ok" type="button" onclick="gradeMessage('instagram','real')">Marcar como creíble</button>
+    </div>
+    <div class="analysis-box" id="analysis-instagram"></div>
+  </div>
+
+  <div class="chat-panel" id="chat-scam" style="display:none;">
+    <button class="chat-back-mobile" type="button" onclick="backToInbox()">← Volver a mensajes</button>
+    <div class="challenge-banner" id="challenge-scam">Consigna: analizá el mensaje. ¿Te parece normal o hay algo extraño?</div>
+    <div class="chat-window">
+      <div class="chat-topbar">
+        <div class="chat-user">
+          <div class="chat-avatar"><span>BV</span></div>
+          <div>
+            <div class="chat-title">brand_verify_team</div>
+            <div class="chat-subtitle">Te escribió recién</div>
+          </div>
+        </div>
+        <span class="dm-badge">Alerta</span>
+      </div>
+      <div class="thread">
+        <div class="msg them">Hola, detectamos una revisión pendiente en tu cuenta verificada.<span class="msg-time">07:41</span></div>
+        <div class="msg them sus">Si no validás tu identidad hoy, vas a perder el sello azul y el alcance promocional. Completalo acá: ig-support-check-now.com/verified<span class="msg-time">07:42</span></div>
+        <div class="msg me">¿Esto me lo mandan por acá? Nunca me había llegado así.<span class="msg-time">07:44</span></div>
+        <div class="msg them sus">Sí, es el nuevo sistema interno. Tenés menos de 15 minutos para evitar la suspensión automática.<span class="msg-time">07:45</span></div>
+      </div>
+    </div>
+    <div class="message-actions">
+      <button class="message-btn flag" type="button" onclick="gradeMessage('scam','fake')">Marcar como sospechoso</button>
+      <button class="message-btn ok" type="button" onclick="gradeMessage('scam','real')">Marcar como creíble</button>
+    </div>
+    <div class="analysis-box" id="analysis-scam"></div>
+  </div>
+
+  <div class="safety-card" id="safetyCard" style="display:none;">
+    <h3>Señales para detectar el mensaje trampa</h3>
+    <p>En esta cuenta abierta, la idea es mirar conversaciones que podrían existir de verdad y encontrar la que intenta manipular con miedo o urgencia.</p>
+    <div class="safety-list">
+      <div class="safety-item">Un mensaje creíble suele tener <strong>contexto</strong>: fechas, colaboraciones, personas conocidas o continuidad de algo previo.</div>
+      <div class="safety-item">El intercambio falso mete <strong>presión inmediata</strong> y un supuesto problema grave para que no pienses.</div>
+      <div class="safety-item">También empuja a un <strong>sitio raro fuera de Instagram</strong> para robar datos o credenciales.</div>
+    </div>
+  </div>
+</section>
+  <div class="profile-modal" id="profileModal">
+    <div class="profile-card">
+      <button class="close-btn" type="button" onclick="closeProfile()">✕</button>
+      <div class="pill">Usuario afectado</div>
+      <div class="profile-head">
+        <div class="avatar"><div class="inner">🐶</div></div>
+        <div class="profile-main">
+          <div class="profile-username-row">
+            <h2>
+              nicki_star
+              <svg class="verified-badge" viewBox="0 0 40 40" aria-label="Cuenta verificada" role="img">
+                <path fill="#0095F6" d="M20 1.8l4.22 2.57 4.93-.27 2.57 4.22 4.34 2.35-.27 4.93L38.2 20l-2.57 4.22.27 4.93-4.22 2.57-2.35 4.34-4.93-.27L20 38.2l-4.22-2.57-4.93.27-2.57-4.22-4.34-2.35.27-4.93L1.8 20l2.57-4.22-.27-4.93 4.22-2.57 2.35-4.34 4.93.27L20 1.8z"/>
+                <path fill="#ffffff" d="M17.1 25.95l-5.05-4.99 2.25-2.28 2.75 2.72 8.66-8.75 2.25 2.23z"/>
+              </svg>
+            </h2>
+          </div>
+          <div class="stats">
+            <div class="stat"><strong>247</strong><span class="stat-label">publicaciones</span></div>
+            <div class="stat"><strong>12.8k</strong><span class="stat-label">seguidores</span></div>
+            <div class="stat"><strong>903</strong><span class="stat-label">seguidos</span></div>
+          </div>
+          <p class="profile-bio">
+            Nicki ✨<br>
+            Música · Viajes · Lifestyle<br>
+            Mamá de <strong>Luna</strong> 🐶<br>
+            <strong>Pista pública:</strong> a veces usa nombres importantes para ella y les agrega números simples.
+          </p>
+        </div>
+      </div>
+
+      <p>Esta vista se abre solo al hacer clic, así el login sigue siendo lo primero que se ve.</p>
+
+      <div class="grid-posts">
+        <div class="post">Luna<br>en el parque</div>
+        <div class="post">Con Luna<br>🐶💖</div>
+        <div class="post">Paseo con<br>Luna</div>
+        <div class="post">Studio<br>session</div>
+        <div class="post">Travel<br>vibes</div>
+        <div class="post">Live<br>tonight</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const correctPassword = 'luna1';
+    const usernameInput = document.getElementById('usernameInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const result = document.getElementById('result');
+    const log = document.getElementById('log');
+    const profileModal = document.getElementById('profileModal');
+    const loginExperience = document.getElementById('loginExperience');
+    const loggedExperience = document.getElementById('loggedExperience');
+    const messagesUnreadCount = document.getElementById('messagesUnreadCount');
+    const messagesUnreadDot = document.getElementById('messagesUnreadDot');
+    const unreadChats = new Set(['manager', 'brand', 'friend', 'instagram', 'scam']);
+
+    function getCurrentTime() {
+      const now = new Date();
+      return `[${now.toLocaleTimeString('es-UY', { hour12: false })}]`;
+    }
+
+    function appendLog(text) {
+      log.textContent += `${getCurrentTime()} ${text}\n`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function tryPassword() {
+      const username = usernameInput.value.trim() || 'nicki_star';
+      const attempt = passwordInput.value.trim();
+
+      if (!attempt) {
+        result.innerHTML = 'Ingresá una contraseña para probar.';
+        result.className = 'status-box error';
+        return;
+      }
+
+      if (attempt === correctPassword && username === 'nicki_star') {
+        appendLog(`Usuario: ${username} | Contraseña: ${attempt} → acceso concedido`);
+        result.innerHTML = '✅ Acceso concedido en la simulación. Se abre la sesión tipo Instagram para continuar el desafío.';
+        result.className = 'status-box success';
+        setTimeout(() => {
+          loginExperience.style.display = 'none';
+          loggedExperience.classList.add('active');
+          const section = document.getElementById('messagesChallenge');
+          section.classList.remove('open');
+          section.setAttribute('aria-hidden', 'true');
+          section.dataset.opened = '';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 700);
+      } else {
+        appendLog(`Usuario: ${username} | Contraseña: ${attempt} → intento fallido`);
+        result.innerHTML = '❌ Intento fallido. Revisá el patrón y abrí las pistas si necesitás ayuda.';
+        result.className = 'status-box error';
+      }
+
+      passwordInput.value = '';
+      passwordInput.focus();
+    }
+
+    function revealClue(number) {
+      const clue = document.getElementById(`clue${number}`);
+      clue.classList.add('revealed');
+      clue.querySelector('.lock').textContent = '🔓 Desbloqueada';
+    }
+
+    function openProfile() {
+      const modal = document.getElementById('profileModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('open');
+      }
+    }
+
+    function closeProfile() {
+      const modal = document.getElementById('profileModal');
+      if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('open');
+      }
+    }
+
+    function openHome(event) {
+      if (event) event.preventDefault();
+      const section = document.getElementById('messagesChallenge');
+      const safetyCard = document.getElementById('safetyCard');
+      loggedExperience.classList.remove('messages-mode');
+      loggedExperience.classList.remove('mobile-chat-open');
+      if (section) {
+        section.classList.remove('open');
+        section.setAttribute('aria-hidden', 'true');
+      }
+      document.querySelectorAll('.challenge-banner').forEach(banner => {
+        banner.classList.remove('show');
+      });
+      if (safetyCard) {
+        safetyCard.style.display = 'none';
+      }
+      const placeholder = document.getElementById('chatPlaceholder');
+      if (placeholder) placeholder.style.display = isMobileView() ? 'none' : 'grid';
+      document.querySelectorAll('.chat-panel').forEach(panel => {
+        panel.style.display = 'none';
+      });
+      document.querySelectorAll('.ig-link').forEach(link => link.classList.remove('active'));
+      const homeLink = document.getElementById('homeNavLink');
+      if (homeLink) homeLink.classList.add('active');
+      const main = document.querySelector('.ig-main');
+      if (main) main.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function updateUnreadUI() {
+      if (!messagesUnreadCount || !messagesUnreadDot) return;
+      const count = unreadChats.size;
+      messagesUnreadCount.textContent = count;
+      messagesUnreadCount.style.display = count ? 'inline-flex' : 'none';
+      messagesUnreadDot.style.display = count ? 'inline-block' : 'none';
+    }
+
+    function isMobileView() {
+      return window.innerWidth <= 760;
+    }
+
+    function backToInbox() {
+      const section = document.getElementById('messagesChallenge');
+      const placeholder = document.getElementById('chatPlaceholder');
+      loggedExperience.classList.remove('mobile-chat-open');
+      document.querySelectorAll('.chat-panel').forEach(panel => {
+        panel.style.display = 'none';
+        panel.classList.remove('active-chat');
+      });
+      if (placeholder) placeholder.style.display = isMobileView() ? 'none' : 'grid';
+      document.querySelectorAll('.dm-item').forEach(item => item.classList.remove('active'));
+      if (section && isMobileView()) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function openMessagesPanel(event) {
+      if (event) event.preventDefault();
+      const section = document.getElementById('messagesChallenge');
+      const navLink = document.getElementById('messagesNavLink');
+      const safetyCard = document.getElementById('safetyCard');
+      if (!section) return;
+
+      loggedExperience.classList.add('messages-mode');
+      section.classList.add('open');
+      section.setAttribute('aria-hidden', 'false');
+
+      document.querySelectorAll('.ig-link').forEach(link => link.classList.remove('active'));
+      if (navLink) navLink.classList.add('active');
+
+      if (safetyCard) {
+        safetyCard.style.display = 'none';
+      }
+
+      const placeholder = document.getElementById('chatPlaceholder');
+      if (placeholder) placeholder.style.display = isMobileView() ? 'none' : 'grid';
+
+      document.querySelectorAll('.challenge-banner').forEach(banner => {
+        banner.classList.remove('show');
+      });
+      document.querySelectorAll('.chat-panel').forEach(panel => {
+        panel.style.display = 'none';
+      });
+      document.querySelectorAll('.dm-item').forEach(item => item.classList.remove('active'));
+
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      section.dataset.opened = 'true';
+    }
+
+    function showChat(chatId) {
+      openMessagesPanel();
+      unreadChats.delete(chatId);
+      updateUnreadUI();
+
+      const placeholder = document.getElementById('chatPlaceholder');
+      if (placeholder) placeholder.style.display = 'none';
+
+      document.querySelectorAll('.chat-panel').forEach(panel => {
+        panel.style.display = 'none';
+        panel.classList.remove('active-chat');
+      });
+      const targetPanel = document.getElementById(`chat-${chatId}`);
+      if (targetPanel) {
+        targetPanel.style.display = 'grid';
+        targetPanel.classList.add('active-chat');
+      }
+
+      if (isMobileView()) {
+        loggedExperience.classList.add('mobile-chat-open');
+      }
+
+      document.querySelectorAll('.challenge-banner').forEach(banner => {
+        banner.classList.remove('show');
+      });
+      const challenge = document.getElementById(`challenge-${chatId}`);
+      if (challenge) challenge.classList.add('show');
+
+      document.querySelectorAll('.dm-item').forEach(item => item.classList.remove('active'));
+      const target = document.getElementById(`dm-${chatId}`);
+      if (target) target.classList.add('active');
+    }
+
+    function gradeMessage(chatId, selection) {
+      const analysis = document.getElementById(`analysis-${chatId}`);
+      analysis.className = 'analysis-box show';
+
+      const responses = {
+        instagram: {
+          fake: {
+            text: '❌ Ojo: este mensaje no era el sospechoso principal. Mantiene todo dentro de la app y no mete enlaces raros ni urgencia extrema.',
+            className: 'analysis-box show bad'
+          },
+          real: {
+            text: '✅ Bien. Aunque incomoda, este mensaje se parece más a una alerta legítima: no manda a sitios extraños y deriva a revisar Seguridad dentro de la plataforma.',
+            className: 'analysis-box show good'
+          }
+        },
+        manager: {
+          fake: {
+            text: '❌ No era el sospechoso. Tiene contexto, continuidad y no intenta sacar datos ni llevarte a otro sitio.',
+            className: 'analysis-box show bad'
+          },
+          real: {
+            text: '✅ Bien. Suena a charla normal de trabajo: hay detalles concretos, tono natural y cero presión rara.',
+            className: 'analysis-box show good'
+          }
+        },
+        brand: {
+          fake: {
+            text: '❌ Este no parece el trampa principal. Propone seguir por el mail público y no pide credenciales ni apura.',
+            className: 'analysis-box show bad'
+          },
+          real: {
+            text: '✅ Bien. La conversación es creíble: habla de campaña, fechas y un canal profesional esperable.',
+            className: 'analysis-box show good'
+          }
+        },
+        friend: {
+          fake: {
+            text: '❌ No parece sospechoso. Tiene confianza previa, referencias compartidas y ningún intento de manipular.',
+            className: 'analysis-box show bad'
+          },
+          real: {
+            text: '✅ Correcto. Este chat se siente natural y coherente con una amiga que comparte contenido del show.',
+            className: 'analysis-box show good'
+          }
+        },
+        scam: {
+          fake: {
+            text: '✅ Correcto. Este es el chat trampa: mete urgencia, amenaza con perder la verificación y manda a un dominio extraño fuera de Instagram.',
+            className: 'analysis-box show good'
+          },
+          real: {
+            text: '❌ Ojo: este era el sospechoso. La presión por tiempo y el link raro son señales clásicas de phishing o ingeniería social.',
+            className: 'analysis-box show bad'
+          }
+        }
+      };
+
+      const response = responses[chatId][selection];
+      analysis.textContent = response.text;
+      analysis.className = response.className;
+    }
+
+    profileModal.addEventListener('click', (e) => {
+      if (e.target === profileModal) closeProfile();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeProfile();
+    });
+
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') tryPassword();
+    });
+
+    updateUnreadUI();
+
+    window.addEventListener('resize', () => {
+      if (!isMobileView()) {
+        loggedExperience.classList.remove('mobile-chat-open');
+        const activeChat = document.querySelector('.chat-panel.active-chat');
+        const placeholder = document.getElementById('chatPlaceholder');
+        if (placeholder && !activeChat) placeholder.style.display = 'grid';
+      }
+    });
+
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const letters = '010101010101001100101010101100101010111001010';
+    let fontSize = window.innerWidth < 680 ? 14 : 18;
+    let columns = Math.floor(window.innerWidth / fontSize);
+    let drops = Array(columns).fill(1);
+
+    function resetMatrix() {
+      fontSize = window.innerWidth < 680 ? 14 : 18;
+      columns = Math.floor(window.innerWidth / fontSize);
+      drops = Array(columns).fill(1);
+    }
+
+    window.addEventListener('resize', resetMatrix);
+
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#00ff66';
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+
+    setInterval(drawMatrix, 50);
+  </script>
+</body>
+</html>

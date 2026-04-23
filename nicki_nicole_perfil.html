@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Perfil de Nicki</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050505;
+      --panel: rgba(12, 12, 14, 0.84);
+      --panel-strong: rgba(18, 18, 22, 0.96);
+      --line: rgba(255,255,255,.09);
+      --text: #f5f5f5;
+      --muted: #a1a1aa;
+      --accent: #00ff66;
+      --accent-soft: rgba(0,255,102,.11);
+      --blue: #0095f6;
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background: radial-gradient(circle at top, rgba(131,58,180,.10), transparent 30%), var(--bg);
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #matrix {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: .26;
+      pointer-events: none;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(0,0,0,.10), rgba(0,0,0,.78));
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .mobile-brandbar {
+      display: none;
+    }
+
+    .app {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      width: min(1160px, 95vw);
+      margin: 0 auto;
+      padding: 28px 0;
+      display: grid;
+      grid-template-columns: .85fr 1.15fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .ig-shell, .profile-card, .info-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .left-col {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+      position: sticky;
+      top: 28px;
+    }
+
+    .info-card {
+      padding: 20px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: .8rem;
+      font-weight: 800;
+      color: var(--accent);
+      background: rgba(0,255,102,.08);
+      border: 1px solid rgba(0,255,102,.20);
+      margin-bottom: 10px;
+    }
+
+    .info-card h2, .profile-card h2 {
+      margin-bottom: 8px;
+    }
+
+    .info-card p, .profile-bio, .mini-note {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: .94rem;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .action-btn, .back-btn {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding: 13px 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-btn:hover, .back-btn:hover {
+      filter: brightness(1.06);
+    }
+
+    .back-btn.primary {
+      background: linear-gradient(135deg, #00b140, #00ff66);
+      color: #021b09;
+      border: none;
+    }
+
+    .profile-card {
+      background: var(--panel-strong);
+      padding: 20px;
+      position: relative;
+      display: grid;
+      gap: 18px;
+    }
+
+    .profile-top {
+      display: grid;
+      gap: 18px;
+    }
+
+    .profile-head {
+      display: grid;
+      grid-template-columns: 108px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .avatar {
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fd1d1d, #fcb045, #833ab4);
+      padding: 4px;
+      flex-shrink: 0;
+    }
+
+    .avatar .inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #17171b;
+      display: block;
+      overflow: hidden;
+    }
+
+    .avatar .inner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .profile-username-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .profile-username-row h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .verified-badge {
+      width: 22px;
+      height: 22px;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin: 0 0 14px;
+      color: #f4f4f5;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.08rem;
+      line-height: 1.1;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+
+    .stat-label {
+      color: #d4d4d8;
+      line-height: 1.15;
+      word-break: keep-all;
+    }
+
+    .profile-bio {
+      color: #e4e4e7;
+      line-height: 1.55;
+    }
+
+    .ig-wordmark {
+      font-size: 2.7rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .ig-wordmark span {
+      background: linear-gradient(135deg, #fd1d1d, #fcb045, #833ab4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .feed-divider {
+      height: 1px;
+      background: rgba(255,255,255,.08);
+      margin: 2px 0 4px;
+    }
+
+    .feed-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      font-size: .82rem;
+      color: #d4d4d8;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 800;
+    }
+
+    .feed-tabs span.active {
+      color: #ffffff;
+    }
+
+    .grid-posts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .post {
+      aspect-ratio: 1/1;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.07);
+      background: #111;
+      position: relative;
+    }
+
+    .post img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .post::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.25), rgba(0,0,0,0));
+      pointer-events: none;
+    }
+
+    .post-label {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      z-index: 1;
+      font-size: .78rem;
+      font-weight: 800;
+      text-shadow: 0 2px 8px rgba(0,0,0,.45);
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .left-col {
+        position: static;
+        top: auto;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .mobile-brandbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(5,5,5,.90);
+        backdrop-filter: blur(12px);
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .mobile-brandbar .ig-wordmark {
+        font-size: 2rem;
+        margin: 0;
+      }
+
+      .app {
+        width: 100%;
+        padding: 14px;
+      }
+
+      .profile-card, .info-card, .ig-shell {
+        border-radius: 22px;
+      }
+
+      .profile-head {
+        grid-template-columns: 76px minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .avatar {
+        width: 76px;
+        height: 76px;
+      }
+
+      .avatar .inner {
+        font-size: 1.2rem;
+      }
+
+      .stats {
+        gap: 10px;
+      }
+
+      .grid-posts {
+        gap: 8px;
+      }
+
+      .post {
+        border-radius: 14px;
+      }
+
+      .post-label {
+        font-size: .68rem;
+        left: 8px;
+        bottom: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="overlay"></div>
+
+  <div class="mobile-brandbar">
+    <div class="ig-wordmark">Insta<span>gram</span></div>
+    <div class="pill">Perfil</div>
+  </div>
+
+  <div class="app">
+    <section class="left-col">
+      <div class="info-card">
+        <div class="pill">nicki_star</div>
+        <h2>Perfil</h2>
+        <p>Contenido reciente, publicaciones y actividad pública.</p>
+        <div class="actions">
+          <a class="back-btn primary" href="index.html">← Volver</a>
+          <a class="action-btn" href="index.html">Seguir investigando</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="profile-card">
+      <div class="pill">nicki_star</div>
+      <div class="ig-wordmark">Insta<span>gram</span></div>
+
+      <div class="profile-top">
+        <div class="profile-head">
+          <div class="avatar"><div class="inner"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/Nicki%20Nicole%20en%20KEXP%20%2852380006338%29%20%28cropped%29.jpg" alt="Foto de perfil de Nicki Nicole"></div></div>
+          <div class="profile-main">
+            <div class="profile-username-row">
+              <h2>
+                nicki_star
+                <svg class="verified-badge" viewBox="0 0 40 40" aria-label="Cuenta verificada" role="img">
+                  <path fill="#0095F6" d="M20 1.8l4.22 2.57 4.93-.27 2.57 4.22 4.34 2.35-.27 4.93L38.2 20l-2.57 4.22.27 4.93-4.22 2.57-2.35 4.34-4.93-.27L20 38.2l-4.22-2.57-4.93.27-2.57-4.22-4.34-2.35.27-4.93L1.8 20l2.57-4.22-.27-4.93 4.22-2.57 2.35-4.34 4.93.27L20 1.8z"/>
+                  <path fill="#ffffff" d="M17.1 25.95l-5.05-4.99 2.25-2.28 2.75 2.72 8.66-8.75 2.25 2.23z"/>
+                </svg>
+              </h2>
+            </div>
+
+            <div class="stats">
+              <div class="stat"><strong>247</strong><span class="stat-label">publicaciones</span></div>
+              <div class="stat"><strong>12.8M</strong><span class="stat-label">seguidores</span></div>
+              <div class="stat"><strong>903</strong><span class="stat-label">seguidos</span></div>
+            </div>
+
+            <p class="profile-bio">
+              Nicki ✨<br>
+              Música · Viajes · Lifestyle<br>
+              Mamá de Luna 🐶
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed-divider"></div>
+
+      <div class="feed-tabs">
+        <span class="active">Publicaciones</span>
+        <span>Reels</span>
+        <span>Etiquetas</span>
+      </div>
+
+      <div class="grid-posts">
+        <div class="post">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Nicki%20Nicole%20%28Apr%202024%29.png" alt="Backstage de Nicki Nicole">
+          <div class="post-label">Backstage</div>
+        </div>
+        <div class="post">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Nicki%20Nicole%20%28Apr%202024%3B%202%29.png" alt="Press de Nicki Nicole">
+          <div class="post-label">Press</div>
+        </div>
+        <div class="post">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Nicki%20Nicole%20%28Apr%202024%3B%203%29.png" alt="Portrait de Nicki Nicole">
+          <div class="post-label">Portrait</div>
+        </div>
+        <div class="post">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Nicki%20Nicole%20en%20Premios%20Gardel%202024%2001.jpg" alt="Gardel de Nicki Nicole">
+          <div class="post-label">Gardel</div>
+        </div>
+        <div class="post">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Nicki%20Nicole%20en%20Premios%20Gardel%202024%20%2811%2727%29.jpg" alt="Show de Nicki Nicole">
+          <div class="post-label">Show</div>
+        </div>
+        <div class="post">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Nicki%20Nicole%20en%20Auditorio%20Nacional%2001.jpg" alt="Tour de Nicki Nicole">
+          <div class="post-label">Tour</div>
+        </div>
+        <div class="post">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Nicki%20Nicole%20en%20Auditorio%20Nacional%2002.jpg" alt="Stage de Nicki Nicole">
+          <div class="post-label">Stage</div>
+        </div>
+        <div class="post">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Nicki%20Nicole%20en%20KEXP%20%2852380084194%29.jpg" alt="Live de Nicki Nicole">
+          <div class="post-label">Live</div>
+        </div>
+        <div class="post">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Nicki%20Nicole%20Latin%20Grammys%202021.jpg" alt="Awards de Nicki Nicole">
+          <div class="post-label">Awards</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const letters = '010101010101001100101010101100101010111001010';
+    let fontSize = window.innerWidth < 680 ? 14 : 18;
+    let columns = Math.floor(window.innerWidth / fontSize);
+    let drops = Array(columns).fill(1);
+
+    function resetMatrix() {
+      fontSize = window.innerWidth < 680 ? 14 : 18;
+      columns = Math.floor(window.innerWidth / fontSize);
+      drops = Array(columns).fill(1);
+    }
+
+    window.addEventListener('resize', resetMatrix);
+
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#00ff66';
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+
+    setInterval(drawMatrix, 50);
+  </script>
+</body>
+</html>
